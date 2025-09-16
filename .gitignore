@@ -1,0 +1,5 @@
+backup-*.tar.gz
+*.log
+backup.run.*.log
+cron.log
+*.gpg
