@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
-# =========================================================
-# backup.sh — Sao lưu DELTA/FULL + Log + Retention + Email
-# Yêu cầu: GNU tar, find; và mailutils/sendmail nếu muốn email
-# Cách dùng: ./backup.sh <thu_muc_nguon> <thu_muc_dich>
-# =========================================================
 set -Eeuo pipefail
 IFS=$'\n\t'
-
 # --------------------------
 # CẤU HÌNH
 # --------------------------
@@ -93,13 +87,13 @@ trap 'on_error "$LINENO" "$BASH_COMMAND"' ERR
 # THAM SỐ
 # --------------------------
 if [[ $# -ne 2 ]]; then
-  echo "Cách dùng: $(basename "$0") <thu_muc_nguon> <thu_muc_dich>" >&2
+  echo "Cách dùng: $(basename "$0") <thu_muc_muon_sao_luu> <noi_luu>" >&2
   exit 1
 fi
 
 SRC="$(abs_path "$1")"
 DST="$(abs_path "$2")"
-[[ -d "$SRC" ]] || { echo "Lỗi: Không thấy thư mục nguồn: $SRC" >&2; exit 1; }
+[[ -d "$SRC" ]] || { echo "Lỗi: Không thấy thư mục cần sao lưu: $SRC" >&2; exit 1; }
 mkdir -p "$DST"
 
 # --------------------------
@@ -118,8 +112,8 @@ START_SEC="$(date +%s)"
 
 : > "$RUN_LOG"  # tạo/clear log phiên
 log_line "=== BẮT ĐẦU BACKUP @ $(date) ==="
-log_line "Nguồn : $SRC"
-log_line "Đích  : $DST"
+log_line "Sao lưu : $SRC"
+log_line "Nơi lưu  : $DST"
 
 # --------------------------
 # TÌM FILE THAY ĐỔI (ĐỆ QUY)
@@ -163,9 +157,9 @@ MODE=""
 if ((${#FILTERED_REL[@]} == 0)); then
   if [[ "$FULL_IF_NO_CHANGE" == "true" ]]; then
     MODE="FULL"
-    log_line "Không có thay đổi (sau lọc) → Sao lưu TOÀN BỘ."
+    log_line "Không có thay đổi  → Sao lưu TOÀN BỘ."
   else
-    log_line "Không có thay đổi (sau lọc) → Dừng, không tạo backup."
+    log_line "Không có thay đổi  → Dừng, không tạo backup."
     exit 0
   fi
 else
@@ -212,8 +206,8 @@ log_line "Kích thước: $SIZE_BYTES bytes, SHA256: $SHA256_VAL, Thời gian: $
 {
   echo "------------------------------------"
   echo "Thời gian           : $(date)"
-  echo "Nguồn               : $SRC"
-  echo "Đích                : $DST"
+  echo "File/Directory      : $SRC"
+  echo "Nơi sao lưu         : $DST"
   echo "File backup         : $BACKUP_NAME"
   echo "Chế độ              : $MODE"
   echo "Số tệp (DELTA)      : ${#FILTERED_REL[@]}"
@@ -259,9 +253,5 @@ fi
 log_line "=== HOÀN TẤT @ $(date) ==="
 exit 0
 
-# --------------------------
-# (TÙY CHỌN) MÃ HÓA GPG SAU KHI NÉN (bật bằng tay)
-# --------------------------
-# Ví dụ mã hóa đối xứng:
 # gpg --yes --batch --symmetric --cipher-algo AES256 --output "${FINAL_ARCHIVE}.gpg" "$FINAL_ARCHIVE"
 # shred -u "$FINAL_ARCHIVE"
